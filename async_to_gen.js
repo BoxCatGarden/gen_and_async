@@ -142,7 +142,7 @@ class AsyncGenerator {
     /**
      * @param v - The value of the corresponding yield expression.
      * When using "`nextInput(await _yield(...))`" to get the value inside the generator function,
-     * `@v` is awaited if it is a Promise. If that is not expected, wrap it.
+     * `@v` will be awaited if it is a Promise. If that is not expected, wrap it.
      * For example, "`{value: @v}`", "`[@v]`", etc.
      * */
     next = this.#nextInit;
