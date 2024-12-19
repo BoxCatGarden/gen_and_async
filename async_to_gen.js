@@ -15,6 +15,7 @@ class Next {
 class AsyncGenerator {
     #asyncFunc;
     #args;
+    #started = false;
     #done = false;
     #yielded = true;
     #nextQueue = new Next(null);
@@ -78,10 +79,7 @@ class AsyncGenerator {
     }
 
     #nextDone(v) {
-        return Promise.resolve().then(() => ({
-            value: undefined,
-            done: true
-        }));
+        return doReturn(Promise.resolve());
     }
 
     #nextEnqueue(v) {
@@ -113,15 +111,16 @@ class AsyncGenerator {
     #nextInit(v) {
         this.next = this.#nextEnqueue;
 
-        let yieldPromise = this.#nextEnqueue(v);
+        let asyncFunc = this.#asyncFunc;
+        let args = this.#args;
+        this.#start();
 
+        let yieldPromise = this.#nextEnqueue(v);
         this.#yielded = false;
 
-        let returnValue = this.#asyncFunc(value => {
+        let returnValue = asyncFunc(value => {
             return this.#YIELD(value);
-        }, ...this.#args);
-        this.#asyncFunc = null;
-        this.#args = null;
+        }, ...args);
 
         returnValue.then(
             value => {
@@ -143,14 +142,8 @@ class AsyncGenerator {
     next = this.#nextInit;
 
     #clearQueue() {
-        this.next = this.#nextDone;
-        this.#done = true;
-        this.#resolveNext = null;
-        this.#yielded = true;
-
         let node = this.#nextQueue.next.next;
-        this.#nextQueue = null;
-        this.#nextQueueTail = null;
+        this.#end();
         while (node) {
             node.resolveYield({
                 value: undefined,
@@ -160,21 +153,44 @@ class AsyncGenerator {
         }
     }
 
+    #start() {
+        this.#started = true;
+        this.#asyncFunc = null;
+        this.#args = null;
+    }
+
+    #end() {
+        this.next = this.#nextDone;
+        this.#done = true;
+        this.#resolveNext = null;
+        this.#yielded = true;
+        this.#nextQueue = null;
+        this.#nextQueueTail = null;
+    }
+
     throw(e) {
+        if (!this.#started) {
+            this.#start();
+            this.#end();
+        }
         if (this.#done)
-            return Promise.resolve(e).then(error => {
-                throw error;
-            });
+            return doReturn(Promise.reject(e));
     }
 
     return(v) {
+        if (!this.#started) {
+            this.#start();
+            this.#end();
+        }
         if (this.#done)
-            return Promise.resolve(v).then(value => ({
-                value: value,
-                done: true
-            }));
+            return doReturn(Promise.resolve(v));
     }
 }
+
+const doReturn = (p) => p.then(v => ({
+    value: v,
+    done: true
+}));
 
 
 /**
