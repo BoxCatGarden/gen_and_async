@@ -17,7 +17,6 @@ class AsyncGenerator {
     #args;
     #done = false;
     #yielded = true;
-    #returnValue = null;
     #nextQueue = new Next(null);
     #nextQueueTail = this.#nextQueue;
     #resolveNext = null;
@@ -79,7 +78,7 @@ class AsyncGenerator {
     }
 
     #nextDone(v) {
-        return this.#returnValue.then(() => ({
+        return Promise.resolve().then(() => ({
             value: undefined,
             done: true
         }));
@@ -112,6 +111,8 @@ class AsyncGenerator {
     }
 
     #nextInit(v) {
+        this.next = this.#nextEnqueue;
+
         let yieldPromise = this.#nextEnqueue(v);
 
         this.#yielded = false;
@@ -121,7 +122,6 @@ class AsyncGenerator {
         }, ...this.#args);
         this.#asyncFunc = null;
         this.#args = null;
-        this.#returnValue = returnValue;
 
         returnValue.then(
             value => {
@@ -137,8 +137,6 @@ class AsyncGenerator {
             }
         );
 
-        this.next = this.#nextEnqueue;
-
         return yieldPromise;
     }
 
@@ -147,7 +145,6 @@ class AsyncGenerator {
     #clearQueue() {
         this.next = this.#nextDone;
         this.#done = true;
-        this.#returnValue = Promise.resolve();
         this.#resolveNext = null;
         this.#yielded = true;
 
