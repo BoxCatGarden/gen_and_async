@@ -165,12 +165,17 @@ class AsyncGenerator {
 
     throw(e) {
         if (this.#done)
-            return this.#lastYield;
+            return Promise.resolve(e).then(error => {
+                throw error;
+            });
     }
 
     return(v) {
         if (this.#done)
-            return this.#lastYield;
+            return Promise.resolve(v).then(value => ({
+                value: value,
+                done: true
+            }));
     }
 }
 
