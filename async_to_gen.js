@@ -61,13 +61,14 @@ class AsyncGenerator {
         return Promise.all([nextPromise, valuePromise]);
     }
 
-    next(v) {
-        if (this.#done)
-            return this.#returnValue.then(() => ({
-                value: undefined,
-                done: true
-            }));
+    #nextDone(v) {
+        return this.#returnValue.then(() => ({
+            value: undefined,
+            done: true
+        }));
+    }
 
+    #nextEnqueue(v) {
         let resolveYield;
         let rejectYield;
         let yieldPromise = new Promise((r, e) => {
@@ -90,35 +91,52 @@ class AsyncGenerator {
             this.#yielded = false;
         }
 
-        if (!this.#returnValue) {
-            this.#yielded = false;
-            let returnValue = this.#asyncFunc((value) => {
-                return this.#YIELD(value);
-            }, ...this.#args);
-            this.#asyncFunc = null;
-            this.#args = null;
-            this.#returnValue = returnValue;
-            returnValue.then(
-                v => {
-                    this.#nextQueue.next.resolveYield({
-                        value: v,
-                        done: true
-                    });
-                    this.#clearQueue();
-                },
-                e => {
-                    this.#nextQueue.next.rejectYield(e);
-                    this.#clearQueue();
-                }
-            );
-        }
+        return yieldPromise;
+    }
+
+    #nextInit(v) {
+        let yieldPromise = this.#nextEnqueue(v);
+
+        this.#yielded = false;
+
+        let returnValue = this.#asyncFunc(value => {
+            return this.#YIELD(value);
+        }, ...this.#args);
+        this.#asyncFunc = null;
+        this.#args = null;
+        this.#returnValue = returnValue;
+
+        returnValue.then(
+            value => {
+                this.#nextQueue.next.resolveYield({
+                    value: value,
+                    done: true
+                });
+                this.#clearQueue();
+            },
+            error => {
+                this.#nextQueue.next.rejectYield(error);
+                this.#clearQueue();
+            }
+        );
+
+        this.next = this.#nextEnqueue;
 
         return yieldPromise;
     }
 
+    next = this.#nextInit;
+
     #clearQueue() {
+        this.next = this.#nextDone;
         this.#done = true;
+        this.#returnValue = Promise.resolve();
+        this.#resolveNext = null;
+        this.#yielded = true;
+
         let node = this.#nextQueue.next.next;
+        this.#nextQueue = null;
+        this.#nextQueueTail = null;
         while (node) {
             node.resolveYield({
                 value: undefined,
@@ -126,10 +144,6 @@ class AsyncGenerator {
             });
             node = node.next;
         }
-        this.#nextQueue = null;
-        this.#nextQueueTail = null;
-        this.#returnValue = Promise.resolve();
-        this.#resolveNext = null;
     }
 
     throw(e) {
