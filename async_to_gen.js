@@ -22,7 +22,22 @@ class AsyncGenerator {
     #nextQueueTail = this.#nextQueue;
     #resolveNext = null;
 
-    constructor(asyncFunc, args) {
+    /**
+     * @param asyncFunc - The async function (including async arrow function) on which this generator is based.
+     * @param args - The arguments for calling `@asyncFunc`.
+     * @description -
+     * The signature of `@asyncFunc` should be in the format like<br/>
+     * "`asyncFunc(_yield[, para1[, para2[, ...[, paraN]]]])`" .<br/>
+     * For example, "`baseFunc(_yield, a, b, c)`".
+     * The first parameter `@_yield` is required, but the name of it
+     * can be changed (e.g., "`abc`").<br/>
+     * `@_yield` is a function with one parameter: `function _yield(value)` .
+     * Use it to yield a value through "`await`": `await _yield(value)` .
+     * To get the value of the "yield expression", use "`nextInput()`":
+     * `nextInput(await _yield(value))` .
+     * @see nextInput
+     * */
+    constructor(asyncFunc, ...args) {
         this.#asyncFunc = asyncFunc;
         this.#args = args;
     }
@@ -157,10 +172,16 @@ class AsyncGenerator {
     }
 }
 
-function createAsyncGenerator(asyncFunc, ...args) {
-    return new AsyncGenerator(asyncFunc, args);
-}
+
+/**
+ * Use it like "`v = nextInput(await _yield(value));`" .
+ * @param yieldExpressionResult - The result of a "yield expression".
+ * @return - The value of the "yield expression".
+ * */
+const nextInput = (yieldExpressionResult) => yieldExpressionResult[0];
+
 
 module.exports = {
-    createAsyncGenerator
+    AsyncGenerator,
+    nextInput,
 };
