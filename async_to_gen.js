@@ -18,9 +18,10 @@ class AsyncGenerator {
     #started = false;
     #done = false;
     #yielded = true;
-    #nextQueue = new Next(null);
-    #nextQueueTail = this.#nextQueue;
+    #nextQueue = null;
+    #nextQueueTail = null;
     #resolveNext = null;
+    #lastReturn = null;
 
     /**
      * @param asyncFunc - The async function (including async arrow function) on which this generator is based.
@@ -50,26 +51,35 @@ class AsyncGenerator {
                 'Yielded without "await". Try "await <gen>.YIELD(<value>)".');
         this.#yielded = true;
 
-        let next = this.#nextQueue.next;
-        this.#nextQueue = next;
-
-        let resolveYield = next.resolveYield;
         let valuePromise = Promise.resolve(value);
 
         valuePromise.then(v => {
-            resolveYield({
+            let next = this.#nextQueue.next;
+            this.#nextQueue = next;
+            next.resolveYield({
                 value: v,
                 done: false
             });
+        }, () => {
         });
 
+        let nNext = this.#nextQueue.next.next;
         let nextPromise;
 
-        if (next.next) {
-            nextPromise = Promise.resolve(next.next.v);
-            nextPromise.then(() => {
-                this.#yielded = false;
-            });
+        if (nNext) {
+            if (nNext.rejectYield) {
+                nextPromise = Promise.resolve(nNext.v);
+                nextPromise.then(() => {
+                    this.#yielded = false;
+                });
+            } else {
+                nextPromise = new Promise(() => {
+                });
+                valuePromise.then(() => {
+                    this.#clearQueue();
+                }, () => {
+                });
+            }
         } else
             nextPromise = new Promise(r => {
                 this.#resolveNext = r;
@@ -79,10 +89,21 @@ class AsyncGenerator {
     }
 
     #nextDone(v) {
-        return doReturn(Promise.resolve());
+        return this.#lastReturn.then(
+            () => ({
+                value: undefined,
+                done: true
+            }),
+            () => ({
+                value: undefined,
+                done: true
+            })
+        );
     }
 
     #nextEnqueue(v) {
+        v = {v};
+
         let resolveYield;
         let rejectYield;
         let yieldPromise = new Promise((r, e) => {
@@ -128,10 +149,12 @@ class AsyncGenerator {
                     value: value,
                     done: true
                 });
+                this.#nextQueue = this.#nextQueue.next;
                 this.#clearQueue();
             },
             error => {
                 this.#nextQueue.next.rejectYield(error);
+                this.#nextQueue = this.#nextQueue.next;
                 this.#clearQueue();
             }
         );
@@ -139,30 +162,31 @@ class AsyncGenerator {
         return yieldPromise;
     }
 
-    /**
-     * @param v - The value of the corresponding yield expression.
-     * When using "`nextInput(await _yield(...))`" to get the value inside the generator function,
-     * `@v` will be awaited if it is a Promise. If that is not expected, wrap it.
-     * For example, "`{value: @v}`", "`[@v]`", etc.
-     * */
     next = this.#nextInit;
 
     #clearQueue() {
-        let node = this.#nextQueue.next.next;
+        let node = this.#nextQueue.next;
         this.#end();
-        while (node) {
+
+        while (node && node.rejectYield) {
             node.resolveYield({
                 value: undefined,
                 done: true
             });
             node = node.next;
         }
+
+        if (node)
+            node.resolveYield(node.v);
     }
 
     #start() {
         this.#started = true;
         this.#asyncFunc = null;
         this.#args = null;
+        this.#nextQueue = new Next(null);
+        this.#nextQueueTail = this.#nextQueue;
+        this.#lastReturn = Promise.resolve();
     }
 
     #end() {
@@ -188,15 +212,21 @@ class AsyncGenerator {
             this.#start();
             this.#end();
         }
+
+        let resolveReturn;
+        let returnPromise = new Promise(r => {
+            resolveReturn = r;
+        });
+
         if (this.#done)
             return doReturn(Promise.resolve(v));
+
     }
 }
 
-const doReturn = (p) => p.then(v => ({
-    value: v,
-    done: true
-}));
+const doReturn = (p) => {
+
+};
 
 
 /**
@@ -204,7 +234,7 @@ const doReturn = (p) => p.then(v => ({
  * @param yieldExpressionResult - The result of a "yield expression".
  * @return - The value of the "yield expression".
  * */
-const nextInput = (yieldExpressionResult) => yieldExpressionResult[0];
+const nextInput = (yieldExpressionResult) => yieldExpressionResult[0].v;
 
 
 module.exports = {
