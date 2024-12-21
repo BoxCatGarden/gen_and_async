@@ -15,7 +15,6 @@ class Next {
 class AsyncGenerator {
     #asyncFunc;
     #args;
-    #done = false;
     #yielded = true;
     #setYieldedFalse = null;
     #onResolveValueYielded = null;
@@ -123,14 +122,12 @@ class AsyncGenerator {
                 value: value,
                 done: true
             });
-            if (this.#nextQueue)
-                this.#clearQueue();
+            this.#clearQueue();
         }, error => {
             let next = this.#nextQueue.next;
             this.#nextQueue = next;
             next.rejectYield(error);
-            if (this.#nextQueue)
-                this.#clearQueue();
+            this.#clearQueue();
         });
 
         return yieldPromise;
@@ -143,8 +140,14 @@ class AsyncGenerator {
     #nextInner = this.#nextInit;
 
     #clearQueue() {
+        if (!this.#nextQueue)
+            return;
+
         let node = this.#nextQueue.next;
+
         this.#end();
+        if (!this.#lastReturn)
+            this.#lastReturn = Promise.resolve();
 
         while (node) {
             node.resolveYield({
@@ -153,9 +156,6 @@ class AsyncGenerator {
             });
             node = node.next;
         }
-
-        if (!this.#lastReturn)
-            this.#lastReturn = Promise.resolve();
     }
 
     #start() {
@@ -183,7 +183,6 @@ class AsyncGenerator {
 
     #end() {
         this.#nextInner = this.#nextDone;
-        this.#done = true;
         this.#resolveNext = null;
         this.#yielded = true;
         this.#setYieldedFalse = null;
@@ -221,7 +220,7 @@ class AsyncGenerator {
         let wrappedResolveValue = this.#wrapResolveValueReturned(
             resolveValue, v, valuePromise);
 
-        if (this.#done) {
+        if (this.#lastReturn) {
             this.#lastReturn.then(wrappedResolveValue, wrappedResolveValue);
             this.#lastReturn = valuePromise;
             return;
@@ -238,7 +237,6 @@ class AsyncGenerator {
         }
 
         this.#nextInner = this.#nextDone;
-        this.#done = true;
         this.#wrapLastResolveYield(wrappedResolveValue);
     }
 
