@@ -115,18 +115,16 @@ class AsyncGenerator {
         }, ...args);
 
         returnValue.then(value => {
-            let next = this.#nextQueue.next;
-            this.#nextQueue = next;
-            next.resolveYield({
+            this.#nextQueue.next.resolveYield({
                 value: value,
                 done: true
             });
-            this.#clearQueue();
+            if (this.#nextQueue)
+                this.#clearQueue();
         }, error => {
-            let next = this.#nextQueue.next;
-            this.#nextQueue = next;
-            next.rejectYield(error);
-            this.#clearQueue();
+            this.#nextQueue.next.rejectYield(error);
+            if (this.#nextQueue)
+                this.#clearQueue();
         });
 
         return yieldPromise;
@@ -139,15 +137,12 @@ class AsyncGenerator {
     #nextInner = this.#nextInit;
 
     #clearQueue() {
-        if (!this.#nextQueue)
-            return;
-
-        let node = this.#nextQueue.next;
-
-        this.#end();
-        if (!this.#lastReturn)
+        if (!this.#lastReturn) {
             this.#lastReturn = Promise.resolve();
-
+            this.#nextInner = this.#nextDone;
+        }
+        let node = this.#nextQueue.next.next;
+        this.#end();
         while (node) {
             node.resolveYield({
                 value: undefined,
@@ -184,7 +179,6 @@ class AsyncGenerator {
     }
 
     #end() {
-        this.#nextInner = this.#nextDone;
         this.#resolveNext = null;
         this.#yielded = true;
         this.#setYieldedFalse = null;
@@ -230,6 +224,7 @@ class AsyncGenerator {
         }
 
         this.#lastReturn = valuePromise;
+        this.#nextInner = this.#nextDone;
 
         if (this.#nextQueue === this.#nextQueueTail) {
             if (!this.#nextQueue)
@@ -239,7 +234,6 @@ class AsyncGenerator {
             return;
         }
 
-        this.#nextInner = this.#nextDone;
         this.#wrapLastResolveYield(wrappedResolveValue);
     }
 
@@ -258,12 +252,14 @@ class AsyncGenerator {
         let rejectYield = next.rejectYield;
         next.resolveYield = (v) => {
             resolveYield(v);
-            this.#clearQueue();
+            if (this.#nextQueue)
+                this.#end();
             resolveValue();
         };
         next.rejectYield = (e) => {
             rejectYield(e);
-            this.#clearQueue();
+            if (this.#nextQueue)
+                this.#end();
             resolveValue();
         };
     }
