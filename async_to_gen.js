@@ -130,7 +130,7 @@ class AsyncGenerator {
     }
 
     #nextInit(v) {
-        this.next = this.#nextEnqueue;
+        this.#nextInner = this.#nextEnqueue;
 
         let asyncFunc = this.#asyncFunc;
         let args = this.#args;
@@ -162,7 +162,11 @@ class AsyncGenerator {
         return yieldPromise;
     }
 
-    next = this.#nextInit;
+    next(v) {
+        return this.#nextInner(v);
+    }
+
+    #nextInner = this.#nextInit;
 
     #clearQueue() {
         let node = this.#nextQueue.next;
@@ -177,7 +181,9 @@ class AsyncGenerator {
         }
 
         if (node)
-            node.resolveYield(node.v);
+            node.resolveYield();
+        else
+            this.#lastReturn = Promise.resolve();
     }
 
     #start() {
@@ -186,11 +192,10 @@ class AsyncGenerator {
         this.#args = null;
         this.#nextQueue = new Next(null);
         this.#nextQueueTail = this.#nextQueue;
-        this.#lastReturn = Promise.resolve();
     }
 
     #end() {
-        this.next = this.#nextDone;
+        this.#nextInner = this.#nextDone;
         this.#done = true;
         this.#resolveNext = null;
         this.#yielded = true;
@@ -220,6 +225,8 @@ class AsyncGenerator {
 
         if (this.#done)
             return doReturn(Promise.resolve(v));
+
+        this.#resolveNext;
 
     }
 }
