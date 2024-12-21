@@ -65,3 +65,4 @@ b.throw(new Promise((r, e) => {
     }, 4000);
 })).catch(v => console.log(`throw=${JSON.stringify(v)}`));
 b.throw(9).catch(v => console.log(`throw=${JSON.stringify(v)}`));
+b.throw(Promise.resolve(88)).catch(v => console.log(`throw=${JSON.stringify(v)}`));

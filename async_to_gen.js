@@ -204,30 +204,54 @@ class AsyncGenerator {
     }
 
     throw(e) {
-        if (!this.#started) {
-            this.#start();
-            this.#end();
-        }
-        if (this.#done)
-            return doReturn(Promise.reject(e));
+        let rejectValue;
+        let valuePromise = new Promise((r, e) => {
+            rejectValue = e;
+        });
+
+        this.#doReturn(e, rejectValue, valuePromise);
+
+        return valuePromise.then();
     }
 
     return(v) {
-        if (!this.#started) {
-            this.#start();
-            this.#end();
-        }
-
-        let resolveReturn;
-        let returnPromise = new Promise(r => {
-            resolveReturn = r;
+        let resolveValue;
+        let valuePromise = new Promise(r => {
+            resolveValue = r;
         });
 
-        if (this.#done)
-            return doReturn(Promise.resolve(v));
+        this.#doReturn(v, resolveValue, valuePromise);
+
+        return valuePromise.then(value => ({
+            value,
+            done: true
+        }));
+    }
+
+    #doReturn(v, resolveValue, valuePromise) {
+        let wrappedResolveValue = this.#warpResolveValueReturned(
+            resolveValue, v, valuePromise);
+
+        if (this.#done) {
+            this.#lastReturn.then(wrappedResolveValue, wrappedResolveValue);
+            this.#lastReturn = valuePromise;
+            return;
+        }
+
+        if (!this.#started)
+            this.#start();
 
         this.#resolveNext;
 
+    }
+
+    #warpResolveValueReturned(resolve, value, promise) {
+        return () => {
+            // Dereference the object referenced in Promise `promise`.
+            if (this.#lastReturn === promise)
+                this.#lastReturn = Promise.resolve();
+            resolve(value);
+        };
     }
 }
 
