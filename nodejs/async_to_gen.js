@@ -82,7 +82,7 @@ class AsyncGenerator {
         let yieldPromise = new Promise((r, e) => {
             resolveYield = r;
             rejectYield = e;
-        }).then(undoneValueArrow);
+        }).then();
 
         let next = new Next(
             null,
@@ -165,7 +165,10 @@ class AsyncGenerator {
         this.#onResolveValueYielded = (v) => {
             let next = this.#nextQueue.next;
             this.#nextQueue = next;
-            next.resolveYield(v);
+            next.resolveYield({
+                value: v,
+                done: false
+            });
         };
         this.#setResolveNext = (r, e) => {
             this.#resolveNext = r;
