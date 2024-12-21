@@ -18,6 +18,7 @@ class AsyncGenerator {
     #done = false;
     #yielded = true;
     #setYieldedFalse = null;
+    #onResolveValueYielded = null;
     #nextQueue = null;
     #nextQueueTail = null;
     #resolveNext = null;
@@ -54,15 +55,7 @@ class AsyncGenerator {
 
         let valuePromise = Promise.resolve(value);
 
-        valuePromise.then(v => {
-            let next = this.#nextQueue.next;
-            this.#nextQueue = next;
-            next.resolveYield({
-                value: v,
-                done: false
-            });
-        }, () => {
-        });
+        valuePromise.then(this.#onResolveValueYielded, emptyArrow);
 
         let nNext = this.#nextQueue.next.next;
         let nextPromise;
@@ -76,8 +69,7 @@ class AsyncGenerator {
                 });
                 valuePromise.then(() => {
                     this.#clearQueue();
-                }, () => {
-                });
+                }, emptyArrow);
             }
         } else
             nextPromise = new Promise(r => {
@@ -88,16 +80,7 @@ class AsyncGenerator {
     }
 
     #nextDone(v) {
-        return this.#lastReturn.then(
-            () => ({
-                value: undefined,
-                done: true
-            }),
-            () => ({
-                value: undefined,
-                done: true
-            })
-        );
+        return this.#lastReturn.then(doneArrow, doneArrow);
     }
 
     #nextEnqueue(v) {
@@ -193,6 +176,14 @@ class AsyncGenerator {
         this.#setYieldedFalse = () => {
             this.#yielded = false;
         };
+        this.#onResolveValueYielded = (v) => {
+            let next = this.#nextQueue.next;
+            this.#nextQueue = next;
+            next.resolveYield({
+                value: v,
+                done: false
+            });
+        };
     }
 
     #startNoQueue() {
@@ -206,6 +197,7 @@ class AsyncGenerator {
         this.#resolveNext = null;
         this.#yielded = true;
         this.#setYieldedFalse = null;
+        this.#onResolveValueYielded = null;
         this.#nextQueue = null;
         this.#nextQueueTail = null;
     }
@@ -269,6 +261,12 @@ class AsyncGenerator {
     }
 }
 
+const doneArrow = () => ({
+    value: undefined,
+    done: true
+});
+const emptyArrow = () => {
+};
 
 /**
  * Use it like "`v = nextInput(await _yield(value));`" .
