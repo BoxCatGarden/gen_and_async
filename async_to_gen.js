@@ -18,6 +18,7 @@ class AsyncGenerator {
     #yielded = true;
     #setYieldedFalse = null;
     #onResolveValueYielded = null;
+    #setResolveNext = null;
     #nextQueue = null;
     #nextQueueTail = null;
     #resolveNext = null;
@@ -62,9 +63,7 @@ class AsyncGenerator {
             nextPromise = Promise.resolve(nNext.v);
             nextPromise.then(this.#setYieldedFalse);
         } else
-            nextPromise = new Promise(r => {
-                this.#resolveNext = r;
-            });
+            nextPromise = new Promise(this.#setResolveNext);
 
         return Promise.all([nextPromise, valuePromise]);
     }
@@ -174,6 +173,9 @@ class AsyncGenerator {
                 done: false
             });
         };
+        this.#setResolveNext = (r, e) => {
+            this.#resolveNext = r;
+        };
     }
 
     #startNoQueue() {
@@ -187,6 +189,7 @@ class AsyncGenerator {
         this.#yielded = true;
         this.#setYieldedFalse = null;
         this.#onResolveValueYielded = null;
+        this.#setResolveNext = null;
         this.#nextQueue = null;
         this.#nextQueueTail = null;
     }
