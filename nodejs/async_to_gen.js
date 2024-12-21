@@ -237,10 +237,13 @@ class AsyncGenerator {
     }
 
     #wrapResolveValueReturned(resolve, value, promise) {
-        return () => {
+        let deref = () => {
             // Dereference the object referenced in Promise `promise`.
             if (this.#lastReturn === promise)
                 this.#lastReturn = Promise.resolve();
+        };
+        promise.then(deref, deref);
+        return () => {
             resolve(value);
         };
     }
