@@ -54,7 +54,9 @@ class AsyncGenerator {
 
         let valuePromise = Promise.resolve(value);
 
-        valuePromise.then(this.#onResolveValueYielded, emptyArrow);
+        valuePromise.then(
+            this.#onResolveValueYielded,
+            this.#setYieldedFalse);
 
         let nNext = this.#nextQueue.next.next;
         let nextPromise;
@@ -80,7 +82,7 @@ class AsyncGenerator {
         let yieldPromise = new Promise((r, e) => {
             resolveYield = r;
             rejectYield = e;
-        });
+        }).then(undoneValueArrow);
 
         let next = new Next(
             null,
@@ -163,10 +165,7 @@ class AsyncGenerator {
         this.#onResolveValueYielded = (v) => {
             let next = this.#nextQueue.next;
             this.#nextQueue = next;
-            next.resolveYield({
-                value: v,
-                done: false
-            });
+            next.resolveYield(v);
         };
         this.#setResolveNext = (r, e) => {
             this.#resolveNext = r;
@@ -207,10 +206,7 @@ class AsyncGenerator {
 
         this.#doReturn(v, resolveValue, valuePromise);
 
-        return valuePromise.then(value => ({
-            value,
-            done: true
-        }));
+        return valuePromise.then(doneValueArrow);
     }
 
     #doReturn(v, resolveValue, valuePromise) {
@@ -268,6 +264,14 @@ class AsyncGenerator {
 const doneArrow = () => ({
     value: undefined,
     done: true
+});
+const doneValueArrow = (value) => ({
+    value,
+    done: true
+});
+const undoneValueArrow = (value) => ({
+    value,
+    done: false
 });
 const emptyArrow = () => {
 };
