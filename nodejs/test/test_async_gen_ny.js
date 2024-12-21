@@ -17,7 +17,14 @@ async function genInner(_yield, va) {
     console.log(`c=`, c);
     c.catch(() => undefined);
     try {
-        return Promise.reject(3);
+        /**
+         * In async generator function, "`return`" is similar with "`yield`",
+         * which is like a variant of "`yield`".
+         * Both of them will await their following value.
+         * But in async function, all values should be awaited explicitly
+         * and "`return`" will not await its following value.
+         * */
+        return await Promise.reject(3);
     } catch (e) {
         console.log(`return error=${e}`);
         return 7;
