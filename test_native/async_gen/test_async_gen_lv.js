@@ -156,6 +156,13 @@ async function a() {
     b = gen(); q = [];
     q.push(Promise.resolve().then().then(v => console.log('then=2')));
     q.push(b.next().then(v => console.log('next=1')));
+
+    await Promise.all(q);
+    console.log('=================');
+
+    b = gen(); q = [];
+    q.push(Promise.resolve().then().then().then(v => console.log('then=3')));
+    q.push(b.next().then(v => console.log('next=1')));
 }
 
 a();
