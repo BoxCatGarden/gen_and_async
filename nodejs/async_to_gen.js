@@ -98,6 +98,19 @@ class AsyncGenerator {
         } else
             nextPromise = new Promise(this.#setResolveNext);
 
+        /**
+         * A problem is that the inner async function is not
+         * awaiting `@valuePromise` but awaiting the wrapper
+         * "`Promise.all()`". There is a level of "`then()`"
+         * between `@valuePromise` and the wrapper. So, if there
+         * are some chains of "`then()`"s of `@value` inside the
+         * function body before this "`yield`", they will have
+         * one level of "`then()`" less than the function execution
+         * after this "`yield`". It is different from the original
+         * async generator function, where the function is awaiting
+         * on the "`@valuePromise`" level and does not have that
+         * one more level.
+         * */
         return Promise.all([nextPromise, valuePromise]);
     }
 
