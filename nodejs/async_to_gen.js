@@ -343,6 +343,12 @@ const emptyArrow = () => {
  * */
 const nextInput = (yieldExpressionResult) => yieldExpressionResult[0].v;
 
+/**
+ * Wrap the `@asyncFunc` as an async generator function.
+ * @param asyncFunc - The async function required by AsyncGenerator.
+ * @return - The async generator function.
+ * @see AsyncGenerator
+ * */
 const __star = (asyncFunc) => {
     return (...args) => new AsyncGenerator(asyncFunc, args);
 };
