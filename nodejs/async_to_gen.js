@@ -333,8 +333,13 @@ const emptyArrow = () => {
  * */
 const nextInput = (yieldExpressionResult) => yieldExpressionResult[0].v;
 
+const __star = (asyncFunc) => {
+    return (...args) => new AsyncGenerator(asyncFunc, ...args);
+};
+
 
 module.exports = {
     AsyncGenerator,
     nextInput,
+    __star,
 };
