@@ -32,6 +32,29 @@ async function a() {
     console.log('=================');
 
     b = gen(); q = [];
+    q.push(b.return(1).then(v => console.log('return=1 - 1')));
+    q.push(b.next().then(v => console.log('next=1 - 2')));
+
+    await Promise.all(q);
+    console.log('=================');
+
+    b = gen(); q = [];
+    q.push(b.next().then().then(v => console.log('next=2')));
+    q.push(b.return(1).then().then(v => console.log('return=2')));
+    q.push(b.next().then(v => console.log('next=1')));
+
+    await Promise.all(q);
+    console.log('=================');
+
+    b = gen(); q = [];
+    q.push(b.next().then().then(v => console.log('next=2')));
+    q.push(b.return(1).then(v => console.log('return=1 - 1')));
+    q.push(b.next().then(v => console.log('next=1 - 2')));
+
+    await Promise.all(q);
+    console.log('=================');
+
+    b = gen(); q = [];
     q.push(b.next().then().then(v => console.log('next=2 - 1')));
     q.push(b.next().then().then(v => console.log('next=2 - 2')));
     q.push(b.return(1).then().then(v => console.log('return=2')));
