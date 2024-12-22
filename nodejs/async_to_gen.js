@@ -26,20 +26,30 @@ class AsyncGenerator {
 
     /**
      * @param asyncFunc - The async function (including async arrow function) on which this generator is based.
-     * @param args - The arguments without `@_yield` for calling `@asyncFunc`.
+     * @param args - An Array containing the arguments without `@_yield` for calling `@asyncFunc`.
      * @description -
-     * The signature of `@asyncFunc` should be in the format like<br/>
-     * "`asyncFunc(_yield[, para1[, para2[, ...[, paraN]]]])`" .<br/>
+     * The signature of `@asyncFunc` should be in the format like the following.
+     * ```
+     * asyncFunc(_yield[, para1[, para2[, ...[, paraN]]]])
+     * ```
      * For example, "`baseFunc(_yield, a, b, c)`".
      * The first parameter `@_yield` is required, but the name of it
      * can be customized (e.g., "`abc`"). The `@_yield` argument will
      * be constructed and passed to `@asyncFunc` by
      * this generator automatically. <br/>
-     * `@_yield` is a function with one parameter: `function _yield(value)` .
-     * Use it to yield `@value` through "`await`": `await _yield(value)` .
+     * `@_yield` is a function with one parameter:
+     * ```
+     * function _yield(value) {...}
+     * ```
+     * Use it to yield `@value` through "`await`":
+     * ```
+     * await _yield(value)
+     * ```
      * To get the value of the "yield expression", use "`nextInput()`":
-     * `nextInput(await _yield(value))` .<br/>
-     * ----- Be Careful -----<br/>
+     * ```
+     * nextInput(await _yield(value))
+     * ```
+     * <b>----- Be Careful -----</b><br/>
      * In async generator function, "`return`" and "`yield`" are very similar
      * and can be thought as a variant of each other. "`return`" and "`yield`"
      * both will await their following value if the value is a Promise, and
@@ -72,7 +82,7 @@ class AsyncGenerator {
      * (i.e., losing a level of "`then()`").
      * @see nextInput
      * */
-    constructor(asyncFunc, ...args) {
+    constructor(asyncFunc, args) {
         this.#asyncFunc = asyncFunc;
         this.#args = args;
     }
@@ -334,7 +344,7 @@ const emptyArrow = () => {
 const nextInput = (yieldExpressionResult) => yieldExpressionResult[0].v;
 
 const __star = (asyncFunc) => {
-    return (...args) => new AsyncGenerator(asyncFunc, ...args);
+    return (...args) => new AsyncGenerator(asyncFunc, args);
 };
 
 
