@@ -1,6 +1,6 @@
 const __star = require('../async_to_gen.js').__star;
 
-const a = __star(async function(_yield) {
+const a = __star(async function (_yield) {
     console.log('run 1st .next()');
     await _yield(505);
     console.log('run 2nd .next()');
