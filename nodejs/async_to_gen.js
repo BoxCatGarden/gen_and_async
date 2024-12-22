@@ -38,7 +38,37 @@ class AsyncGenerator {
      * `@_yield` is a function with one parameter: `function _yield(value)` .
      * Use it to yield `@value` through "`await`": `await _yield(value)` .
      * To get the value of the "yield expression", use "`nextInput()`":
-     * `nextInput(await _yield(value))` .
+     * `nextInput(await _yield(value))` .<br/>
+     * ----- Be Careful -----<br/>
+     * In async generator function, "`return`" and "`yield`" are very similar
+     * and can be thought as a variant of each other. "`return`" and "`yield`"
+     * both will await their following value if the value is a Promise, and
+     * will throw an error inside the function body if the Promise is rejected.<br/>
+     * However, in async function, all values should be awaited explicitly.
+     * If the awaited value is a rejected Promise, it will throw an error
+     * inside the function body. So, when "`return`"ing a value, if it is
+     * expected to perform like that in an async generator function,
+     * "`await`" the value manually.
+     * ```
+     * async function foo() {
+     *     let a = Promise.reject();
+     *     try {
+     *         return await a;
+     *     } catch (e) {
+     *         console.log('Caught the rejection reason.');
+     *     }
+     * }
+     * ```
+     * If the rejected Promise is not awaited, the value will be
+     * returned without throwing an error, and the Promise of
+     * the async function call will be rejected by it. Then,
+     * the Promise returned by the corresponding "`next()`"
+     * will be rejected with the same rejection reason as that
+     * of the Promise returned inside the function body.<br/>
+     * However, from the above, if it is not expected to catch the rejection reason
+     * inside the function body, return the Promise without an "`await`"
+     * can also get the same "`next()`" result, but the "`await`" behaviour
+     * may have some differences.
      * @see nextInput
      * */
     constructor(asyncFunc, ...args) {
