@@ -13,7 +13,7 @@ async function genInner(_yield, va) {
 }
 
 function gen() {
-    return new AsyncGenerator(genInner, 25);
+    return new AsyncGenerator(genInner, [25]);
 }
 
 Promise.resolve().then(() => console.log('##################'));
