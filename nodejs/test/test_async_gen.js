@@ -1,6 +1,6 @@
-const AsyncGenerator = require('../async_to_gen.js').AsyncGenerator;
+const __star = require('../async_to_gen.js').__star;
 
-async function aaa(_yield) {
+const a = __star(async function(_yield) {
     console.log('run 1st .next()');
     await _yield(505);
     console.log('run 2nd .next()');
@@ -36,11 +36,7 @@ async function aaa(_yield) {
     console.log('after 3rd yield');
     await _yield(11);
     console.log('@@@@ fin');
-}
-
-function a() {
-    return new AsyncGenerator(aaa);
-}
+});
 
 Promise.resolve().then(() => {
     console.log('##################');
