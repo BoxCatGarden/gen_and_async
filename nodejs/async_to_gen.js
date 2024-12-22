@@ -66,9 +66,9 @@ class AsyncGenerator {
      * will be rejected with the same rejection reason as that
      * of the Promise returned inside the function body.<br/>
      * However, from the above, if it is not expected to catch the rejection reason
-     * inside the function body, return the Promise without an "`await`"
-     * can also get the same "`next()`" result, but the "`await`" behaviour
-     * may have some differences.
+     * inside the function body, returning the Promise without an "`await`"
+     * can also get the same "`next()`" result as that of async generator
+     * function, but the "`await`" behaviour may have some differences.
      * @see nextInput
      * */
     constructor(asyncFunc, ...args) {
