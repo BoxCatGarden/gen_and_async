@@ -136,7 +136,7 @@ class AsyncGenerator {
         let yieldPromise = new Promise((r, e) => {
             resolveYield = r;
             rejectYield = e;
-        }).then();
+        });
 
         let next = new Next(
             null,
@@ -246,13 +246,15 @@ class AsyncGenerator {
 
     throw(e) {
         let rejectValue;
-        let valuePromise = new Promise((r, e) => {
-            rejectValue = e;
+        let valuePromise = new Promise((r, h) => {
+            rejectValue = h;
         });
 
-        this.#doReturn(e, rejectValue, valuePromise);
+        this.#doReturn(e, rejectValue);
+        if (!this.#lastReturn)
+            this.#lastReturn = Promise.resolve();
 
-        return valuePromise.then();
+        return valuePromise;
     }
 
     return(v) {
@@ -261,48 +263,46 @@ class AsyncGenerator {
             resolveValue = r;
         });
 
-        this.#doReturn(v, resolveValue, valuePromise);
+        this.#bindDeref(valuePromise);
+        this.#doReturn(v, resolveValue);
+        this.#lastReturn = valuePromise;
 
         return valuePromise.then(doneValueArrow);
     }
 
-    #doReturn(v, resolveValue, valuePromise) {
-        let wrappedResolveValue = this.#wrapResolveValueReturned(
-            resolveValue, v, valuePromise);
+    #doReturn(v, resolveValue) {
+        let wrappedResolveValue = () => {
+            resolveValue(v);
+        };
 
         if (this.#lastReturn) {
             this.#lastReturn.then(wrappedResolveValue, wrappedResolveValue);
-            this.#lastReturn = valuePromise;
             return;
         }
 
-        this.#lastReturn = valuePromise;
         this.#nextInner = this.#nextDone;
 
         if (this.#nextQueue === this.#nextQueueTail) {
             if (!this.#nextQueue)
                 this.#startNoQueue();
             this.#end();
-            wrappedResolveValue();
+            Promise.resolve().then(wrappedResolveValue);
             return;
         }
 
-        this.#wrapLastResolveYield(wrappedResolveValue);
+        this.#wrapLastResolveYield(resolveValue, v);
     }
 
-    #wrapResolveValueReturned(resolve, value, promise) {
+    #bindDeref(promise) {
         let deref = () => {
             // Dereference the object referenced in Promise `promise`.
             if (this.#lastReturn === promise)
                 this.#lastReturn = Promise.resolve();
         };
         promise.then(deref, deref);
-        return () => {
-            resolve(value);
-        };
     }
 
-    #wrapLastResolveYield(resolveValue) {
+    #wrapLastResolveYield(resolveValue, value) {
         let next = this.#nextQueueTail;
         let resolveYield = next.resolveYield;
         let rejectYield = next.rejectYield;
@@ -310,13 +310,13 @@ class AsyncGenerator {
             resolveYield(v);
             if (this.#nextQueue)
                 this.#end();
-            resolveValue();
+            resolveValue(value);
         };
         next.rejectYield = (e) => {
             rejectYield(e);
             if (this.#nextQueue)
                 this.#end();
-            resolveValue();
+            resolveValue(value);
         };
     }
 }
