@@ -87,26 +87,41 @@ class AsyncGenerator {
         this.#args = args;
     }
 
-    #YIELD(value) {
+    async #YIELD(value) {
         if (this.#yielded)
             throw new SyntaxError(
                 'Yielded without "await". Try "await _yield(<value>)".');
         this.#yielded = true;
 
-        let valuePromise = Promise.resolve(value);
+        let valueReal;
+        try {
+            valueReal = await value;
+        } catch (e) {
+            this.#yielded = false;
+            throw e;
+        }
 
-        valuePromise.then(
-            this.#onResolveValueYielded,
-            this.#setYieldedFalse);
+        let next = this.#nextQueue.next;
+        next.resolveYield({
+            value: valueReal,
+            done: false
+        });
 
-        let nNext = this.#nextQueue.next.next;
+        let nNext = next.next;
         let nextPromise;
 
         if (nNext) {
-            nextPromise = Promise.resolve(nNext.v);
-            nextPromise.then(this.#setYieldedFalse);
+            if (nNext.rejectYield) {
+                nextPromise = Promise.resolve(nNext.v);
+                nextPromise.then(this.#setYieldedFalse);
+            } else {
+                this.#clearQueue();
+                return new Promise(emptyResolver);
+            }
         } else
             nextPromise = new Promise(this.#setResolveNext);
+
+        this.#nextQueue = next;
 
         /**
          * A problem is that the inner async function is not
@@ -121,7 +136,7 @@ class AsyncGenerator {
          * on the "`@valuePromise`" level and does not have that
          * one more level.
          * */
-        return Promise.all([nextPromise, valuePromise]);
+        return nextPromise;
     }
 
     #nextDone(v) {
@@ -334,6 +349,8 @@ const undoneValueArrow = (value) => ({
     done: false
 });
 const emptyArrow = () => {
+};
+const emptyResolver = () => {
 };
 
 /**
