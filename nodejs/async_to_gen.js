@@ -358,7 +358,7 @@ const emptyResolver = () => {
  * @param yieldExpressionResult - The result of a "yield expression".
  * @return - The value of the "yield expression".
  * */
-const nextInput = (yieldExpressionResult) => yieldExpressionResult[0].v;
+const nextInput = (yieldExpressionResult) => yieldExpressionResult.v;
 
 /**
  * Wrap the `@asyncFunc` as an async generator function.
