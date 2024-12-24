@@ -2,8 +2,8 @@ const {
     __star
 } = require('../async_to_gen.js');
 
-const gen = __star(async function* () {
-    yield 5;
+const gen = __star(async function (_yield) {
+    await _yield(5);
     return 6;
 });
 
