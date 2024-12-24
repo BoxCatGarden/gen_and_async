@@ -283,17 +283,11 @@ class AsyncGenerator {
         }
 
         if (this.#nextQueue === this.#nextQueueTail) {
-            if (!this.#nextQueue)
-                this.#startNoQueue();
-            this.#lastReturn = Promise.resolve();
-            this.#nextInner = this.#nextDone;
-            this.#end();
-            this.#lastReturn.then(wrappedResolveValue);
+            this.#returnNoWait(wrappedResolveValue);
             return;
         }
 
-        this.#resolveNext = null;
-        this.#addReturnNext(wrappedResolveValue);
+        this.#returnNext(wrappedResolveValue);
     }
 
     #bindDeref(promise) {
@@ -305,7 +299,17 @@ class AsyncGenerator {
         promise.then(deref, deref);
     }
 
-    #addReturnNext(wrappedResolveValue) {
+    #returnNoWait(wrappedResolveValue) {
+        if (!this.#nextQueue)
+            this.#startNoQueue();
+        this.#lastReturn = Promise.resolve();
+        this.#nextInner = this.#nextDone;
+        this.#end();
+        this.#lastReturn.then(wrappedResolveValue);
+    }
+
+    #returnNext(wrappedResolveValue) {
+        this.#resolveNext = null;
         let next = new Next(
             null,
             null,
