@@ -123,17 +123,23 @@ class AsyncGenerator {
         this.#nextQueue = next;
 
         /**
-         * A problem is that the inner async function is not
-         * awaiting `@valuePromise` but awaiting the wrapper
-         * "`Promise.all()`". There is a level of "`then()`"
-         * between `@valuePromise` and the wrapper. So, if there
-         * are some chains of "`then()`"s of `@value` inside the
-         * function body before this "`yield`", they will have
-         * one level of "`then()`" less than the function execution
+         * A problem is that the outer async function is not
+         * awaiting `@value` but awaiting `@nextPromise`.
+         * There is a level of "`then()`" between `@value`
+         * and `@nextPromise`.
+         * So, if there are some chains of "`then()`"s waiting for `@value`
+         * inside the outer function body before this "`yield`", they will have
+         * one level of "`then()`" less than the outer function execution
          * after this "`yield`". It is different from the original
          * async generator function, where the function is awaiting
-         * on the "`@valuePromise`" level and does not have that
-         * one more level.
+         * on the level of `@value` and does not have that
+         * one more level.<br/>
+         * The original async generator function is not implemented like
+         * what it is here. The original "`next()`"
+         * can restore the function execution directly; thus, it can
+         * await `@value` and add the restoration into a "`then()`" of `@value`.
+         * Thus, the function is awaiting `@value`, instead of a Promise
+         * of "`next()`".
          * */
         return nextPromise;
     }
