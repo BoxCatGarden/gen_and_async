@@ -11,9 +11,9 @@ async function a(n, v) {
 }
 
 Promise.resolve()
-    .then().then().then(v => console.log('then=3'));
-Promise.resolve()
-    .then().then().then().then(v => console.log('then=4'));
+    .then().then()
+    .then(v => console.log('then=3'))
+    .then(v => console.log('then=4'));
 a(1, 1).then(v => console.log('return =', v));
 a(2, 3);
 console.log('after call');
