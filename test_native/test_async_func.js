@@ -8,13 +8,14 @@ async function a(n, v, resolve, awaitRet) {
     v = await Promise.resolve(v + 1);
     console.log(`value=${v}`);
     if (awaitRet)
-        return await Promise[resolve ? 'resolve' : 'reject'](22);
+        return await Promise[resolve ? 'resolve' : 'reject'](n + 0.1);
     else
-        return Promise[resolve ? 'resolve' : 'reject'](22);
+        return Promise[resolve ? 'resolve' : 'reject'](n + 0.2);
 }
 
 Promise.resolve()
-    .then().then()
+    .then(v => console.log('then=1'))
+    .then(v => console.log('then=2'))
     .then(v => console.log('then=3'))
     .then(v => console.log('then=4'))
     .then(v => console.log('then=5'))
