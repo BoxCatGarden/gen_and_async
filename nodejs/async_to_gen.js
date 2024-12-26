@@ -99,41 +99,37 @@ class AsyncGenerator {
         this.#args = args;
     }
 
-    async #YIELD(value) {
+    #YIELD(value) {
         if (this.#yielded)
             throw new SyntaxError(
                 'Yielded without "await". Try "await _yield(<value>)".');
         this.#yielded = true;
 
-        let valueReal;
-        try {
-            valueReal = await value;
-        } catch (e) {
-            this.#yielded = false;
-            throw e;
-        }
+        let valuePromise = Promise.resolve(value);
 
-        let next = this.#nextQueue.next;
-        next.resolveYield({
-            value: valueReal,
-            done: false
-        });
+        valuePromise.then((v) => {
+            let next = this.#nextQueue.next;
+            next.resolveYield({
+                value: v,
+                done: false
+            });
+            if (!next.next || next.next.rejectYield)
+                this.#nextQueue = next;
+            else
+                this.#clearQueue();
+        }, this.#setYieldedFalse);
 
-        let nNext = next.next;
+        let nNext = this.#nextQueue.next;
         let nextPromise;
 
         if (nNext) {
             if (nNext.rejectYield) {
                 nextPromise = Promise.resolve(nNext.v);
                 nextPromise.then(this.#setYieldedFalse);
-            } else {
-                this.#clearQueue();
-                return new Promise(emptyResolver);
-            }
+            } else
+                nextPromise = new Promise(emptyResolver);
         } else
             nextPromise = new Promise(this.#setResolveNext);
-
-        this.#nextQueue = next;
 
         /**
          * A problem is that the outer async function is not
@@ -154,7 +150,7 @@ class AsyncGenerator {
          * Thus, the function is awaiting `@value`, instead of a Promise
          * of "`next()`".
          * */
-        return nextPromise;
+        return Promise.all([nextPromise, valuePromise]);
     }
 
     #nextDone(v) {
