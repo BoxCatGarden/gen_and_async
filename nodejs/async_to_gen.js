@@ -48,6 +48,13 @@ class AsyncGenerator {
      * ```
      * nextInput(await _yield(value))
      * ```
+     * It is recommended to await the return value before returning it
+     * in order to get stable levels of "`then()`" and to be able to
+     * throw and catch the error caused by the return value inside the
+     * function body (instead of directly returning it):
+     * ```
+     * return await value;
+     * ```
      * <b>----- Be Careful -----</b><br/>
      * In async generator function, "`return`" and "`yield`" are very similar
      * and can be thought as a variant of each other. "`return`" and "`yield`"
@@ -78,7 +85,13 @@ class AsyncGenerator {
      * inside the function body, returning the Promise without an "`await`"
      * can also get the same "`next()`" result as that of async generator
      * function, but the "`await`" behaviour may have some differences
-     * (i.e., losing a level of "`then()`").
+     * (thus, different levels of "`then()`").<br/>
+     * When returning a Promise from an async function, there may have some
+     * levels of "`then()`" between the returned Promise and the output
+     * Promise (i.e., the one returned when calling the function).
+     * But returning a plane value will not.
+     * So, awaiting the return value before returning it can also get
+     * stable levels of "`then()`".
      * @see nextInput
      * */
     constructor(asyncFunc, args) {
