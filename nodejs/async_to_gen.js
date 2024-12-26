@@ -112,7 +112,7 @@ class AsyncGenerator {
             this.#onResolveValueYielded,
             this.#setYieldedFalse);
 
-        let nNext = this.#nextQueue.next;
+        let nNext = this.#nextQueue.next.next;
         let nextPromise;
 
         if (nNext) {
@@ -126,9 +126,11 @@ class AsyncGenerator {
 
         /**
          * A problem is that the outer async function is not
-         * awaiting `@value` but awaiting `@nextPromise`.
-         * There is a level of "`then()`" between `@value`
-         * and `@nextPromise`.
+         * awaiting `@value` but awaiting a "`Promise.all()`"
+         * pack of `@valuePromise`. There is a level of "`then()`"
+         * between `@valuePromise` and the pack. And there is no
+         * level of "`then()`" between `@value` and `@valuePromise`;
+         * thus, they are at the same level.
          * So, if there are some chains of "`then()`"s waiting for `@value`
          * inside the outer function body before this "`yield`", they will have
          * one level of "`then()`" less than the outer function execution
@@ -137,11 +139,10 @@ class AsyncGenerator {
          * on the level of `@value` and does not have that
          * one more level.<br/>
          * The original async generator function is not implemented like
-         * what it is here. The original "`next()`"
-         * can restore the function execution directly; thus, it can
-         * await `@value` and add the restoration into a "`then()`" of `@value`.
-         * Thus, the function is awaiting `@value`, instead of a Promise
-         * of "`next()`".
+         * what it is here. The original "`next()`" can restore the
+         * function execution directly; therefore, it can add the restoration
+         * into a "`then()`" of `@value` and the function can await `@value`
+         * directly, instead of a packing Promise of "`next()`" and `@value`.
          * */
         return Promise.all([nextPromise, valuePromise]);
     }
