@@ -17,6 +17,7 @@ class AsyncGenerator {
     #args;
     #yielded = true;
     #setYieldedFalse = null;
+    #onResolveValueYielded = null;
     #setResolveNext = null;
     #nextQueue = null;
     #nextQueueTail = null;
@@ -107,17 +108,9 @@ class AsyncGenerator {
 
         let valuePromise = Promise.resolve(value);
 
-        valuePromise.then((v) => {
-            let next = this.#nextQueue.next;
-            next.resolveYield({
-                value: v,
-                done: false
-            });
-            if (!next.next || next.next.rejectYield)
-                this.#nextQueue = next;
-            else
-                this.#clearQueue();
-        }, this.#setYieldedFalse);
+        valuePromise.then(
+            this.#onResolveValueYielded,
+            this.#setYieldedFalse);
 
         let nNext = this.#nextQueue.next;
         let nextPromise;
@@ -243,6 +236,17 @@ class AsyncGenerator {
         this.#setYieldedFalse = () => {
             this.#yielded = false;
         };
+        this.#onResolveValueYielded = (v) => {
+            let next = this.#nextQueue.next;
+            next.resolveYield({
+                value: v,
+                done: false
+            });
+            if (!next.next || next.next.rejectYield)
+                this.#nextQueue = next;
+            else
+                this.#clearQueue();
+        };
         this.#setResolveNext = (r, e) => {
             this.#resolveNext = r;
         };
@@ -257,6 +261,7 @@ class AsyncGenerator {
         this.#resolveNext = null;
         this.#yielded = true;
         this.#setYieldedFalse = null;
+        this.#onResolveValueYielded = null;
         this.#setResolveNext = null;
         this.#nextQueue = null;
         this.#nextQueueTail = null;
@@ -357,7 +362,7 @@ const emptyResolver = () => {
  * @param yieldExpressionResult - The result of a "yield expression".
  * @return - The value of the "yield expression".
  * */
-const nextInput = (yieldExpressionResult) => yieldExpressionResult.v;
+const nextInput = (yieldExpressionResult) => yieldExpressionResult[0].v;
 
 /**
  * Wrap the `@asyncFunc` as an async generator function.
