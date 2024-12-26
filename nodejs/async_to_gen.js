@@ -339,6 +339,10 @@ class AsyncGenerator {
         this.#nextQueueTail.next = next;
         this.#nextQueueTail = next;
     }
+
+    [Symbol.asyncIterator]() {
+        return this;
+    }
 }
 
 const doneArrow = () => ({
