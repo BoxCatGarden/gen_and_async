@@ -24,17 +24,24 @@ class AsyncFunctionOnce {
             this.reject(e);
             return;
         }
-        if (!next.done)
+        if (!next.done) {
             Promise.resolve(next.value)
                 .then(value => {
-                    this.step(value);
-                }, error => {
-                    this.reject(error);
+                    this.step({ok: true, value});
+                }, value => {
+                    this.step({ok: false, value});
                 });
-        else
+        } else
             this.resolve(next.value);
     }
 }
+
+const _await = (expResult) => {
+    if (expResult.ok)
+        return expResult.value;
+    else
+        throw expResult.value;
+};
 
 const __async = (genFunc) => {
     return (...args) => new AsyncFunctionOnce(genFunc, args).run();
