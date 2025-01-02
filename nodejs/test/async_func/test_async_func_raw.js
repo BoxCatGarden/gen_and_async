@@ -1,14 +1,19 @@
-async function a(n, v) {
+const {
+    __async,
+    _await
+} = require('../../gen_to_async.js');
+
+const a = __async(function* (n, v) {
     console.log(`call=${n}`);
-    v = await v;
+    v = _await(yield v);
     console.log(`value=${v}`);
     setTimeout(() => {
         console.log(`timeout=${v}`);
     }, 0);
-    v = await (v + 1);
+    v = _await(yield(v + 1));
     console.log(`value=${v}`);
     return 22;
-}
+});
 
 Promise.resolve()
     .then().then()
