@@ -1,4 +1,4 @@
-const AsyncGenerator = require('../async_to_gen.js').AsyncGenerator;
+const AsyncGenerator = require('../../async_to_gen.js').AsyncGenerator;
 
 async function genInner() {
 

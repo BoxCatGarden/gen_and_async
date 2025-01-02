@@ -1,6 +1,6 @@
 const {
     __star
-} = require('../async_to_gen.js');
+} = require('../../async_to_gen.js');
 
 const gen = __star(async function (_yield) {
     for (let i = 0; i < 5; ++i)

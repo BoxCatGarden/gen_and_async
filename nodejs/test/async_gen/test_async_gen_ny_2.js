@@ -1,7 +1,7 @@
 const {
     AsyncGenerator,
     nextInput
-} = require('../async_to_gen.js');
+} = require('../../async_to_gen.js');
 
 async function genInner(_yield, va) {
     console.log('va=', va);

@@ -1,7 +1,7 @@
 const {
     AsyncGenerator,
     __star
-} = require('../async_to_gen.js');
+} = require('../../async_to_gen.js');
 
 async function genInner() {
     return 11;

@@ -1,7 +1,7 @@
 const {
     nextInput,
     __star
-} = require('../async_to_gen.js');
+} = require('../../async_to_gen.js');
 
 const a = __star(async function (_yield, n) {
     for (let i = 0; i < n; ++i) {
