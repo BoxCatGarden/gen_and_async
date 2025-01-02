@@ -36,6 +36,12 @@ class AsyncFunctionOnce {
     }
 }
 
+/**
+ * To await a value, use it like the following:
+ * ```
+ * let val = _await(yield value);
+ * ```
+ * */
 const _await = (expResult) => {
     if (expResult.ok)
         return expResult.value;
@@ -43,11 +49,18 @@ const _await = (expResult) => {
         throw expResult.value;
 };
 
+/**
+ * Wrap the generator function as an async function.
+ * @param genFunc - The generator function.
+ * @return - The output async function.
+ * @see _await
+ * */
 const __async = (genFunc) => {
     return (...args) => new AsyncFunctionOnce(genFunc, args).run();
 };
 
 
 module.exports = {
-    __async
+    __async,
+    _await,
 };
