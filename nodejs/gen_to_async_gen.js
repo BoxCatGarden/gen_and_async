@@ -49,7 +49,13 @@ class AsyncGenerator {
 }
 
 /**
- * Wrap a generator function as an async generator function.
+ * Wrap a generator function as an async generator function.<br/>
+ * <b>-----Recommended-----</b><br/>
+ * To get a similar behave as the original async generator function,
+ * await the value before return it:
+ * ```
+ * return _await(yield Awaited(value));
+ * ```
  * @param genFunc - The generator function.
  * @return - The async generator function.
  * @see _await
