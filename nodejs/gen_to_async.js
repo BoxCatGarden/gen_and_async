@@ -2,6 +2,8 @@ class AsyncFunctionOnce {
     generator;
     resolve;
     reject;
+    onOk;
+    onFail;
 
     constructor(genFunc, args) {
         this.generator = genFunc(...args);
@@ -12,6 +14,12 @@ class AsyncFunctionOnce {
             this.resolve = r;
             this.reject = h;
         });
+        this.onOk = (value) => {
+            this.step({ok: true, value});
+        };
+        this.onFail = (value) => {
+            this.step({ok: false, value});
+        };
         this.step();
         return ret;
     }
@@ -26,11 +34,7 @@ class AsyncFunctionOnce {
         }
         if (!next.done) {
             Promise.resolve(next.value)
-                .then(value => {
-                    this.step({ok: true, value});
-                }, value => {
-                    this.step({ok: false, value});
-                });
+                .then(this.onOk, this.onFail);
         } else
             this.resolve(next.value);
     }
