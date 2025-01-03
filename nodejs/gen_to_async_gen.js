@@ -138,7 +138,19 @@ class AsyncGenerator {
     }
 
     #clearQueue() {
-
+        if (!this.#lastReturn) {
+            this.#lastReturn = Promise.resolve();
+            this.#nextInner = this.#nextDone;
+        }
+        let node = this.#nextQueue.next.next;
+        this.#end();
+        while (node) {
+            node.resolveYield({
+                value: undefined,
+                done: true
+            });
+            node = node.next;
+        }
     }
 
     #nextDone(v) {
@@ -169,6 +181,12 @@ class AsyncGenerator {
 
     next(v) {
         return this.#nextInner(v);
+    }
+
+    throw(v) {
+    }
+
+    return(v) {
     }
 
     [Symbol.asyncIterator]() {
