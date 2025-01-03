@@ -92,27 +92,41 @@ class AsyncGenerator {
                         this.#onStepFail);
             }
         } else {
-            Promise.resolve(nextValue)
-                .then(this.#onResolveValueYieldedDone,
+            if (nextValue.then instanceof Function) {
+                nextValue.then(
+                    this.#onResolveValueYieldedDone,
                     this.#onRejectValueYielded);
+            } else
+                this.#onResolveValueYieldedDone(nextValue);
         }
     }
 
     #start() {
         this.#onResolveValueYielded = (value) => {
-            this.#resolveYield({
+            let next = this.#nextQueue.next;
+            next.resolveYield({
                 value,
                 done: false
             });
+            if (next.next) {
+                if (next.next.rejectYield) {
+                    this.#nextQueue = next;
+                    this.#step({value: next.next.v, ok: true});
+                } else
+                    this.#clearQueue();
+            } else
+                this.#nextQueue = next;
         };
         this.#onResolveValueYieldedDone = (value) => {
-            this.#resolveYield({
+            this.#nextQueue.next.resolveYield({
                 value,
                 done: true
             });
+            this.#clearQueue();
         };
         this.#onRejectValueYielded = (error) => {
-            this.#rejectYield(error);
+            this.#nextQueue.next.rejectYield(error);
+            this.#clearQueue();
         };
         this.#onStepOk = (value) => {
             this.#step({value, ok: true});
@@ -133,6 +147,10 @@ class AsyncGenerator {
         this.#onStepFail = null;
         this.#nextQueue = null;
         this.#nextQueueTail = null;
+    }
+
+    #clearQueue() {
+
     }
 
     [Symbol.asyncIterator]() {
