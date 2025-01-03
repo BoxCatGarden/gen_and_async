@@ -57,20 +57,8 @@ class AsyncGenerator {
     #onStepFail = null;
     #lastReturn = null;
 
-    constructor(genFunc, args) {
-        this.#generator = genFunc(...args);
-    }
-
-    #resolveYield(v) {
-        let next = this.#nextQueue.next;
-        this.#nextQueue = next;
-        next.resolveYield(v);
-    }
-
-    #rejectYield(v) {
-        let next = this.#nextQueue.next;
-        this.#nextQueue = next;
-        next.rejectYield(v);
+    constructor(genFunc, thisObj, args) {
+        this.#generator = genFunc.apply(thisObj, args);
     }
 
     #step(v) {
@@ -174,7 +162,9 @@ class AsyncGenerator {
  * @see Yielded
  * */
 const __async_star = (genFunc) => {
-    return (...args) => new AsyncGenerator(genFunc, args);
+    return (function (...args) {
+        return new AsyncGenerator(genFunc, this, args);
+    });
 };
 
 
