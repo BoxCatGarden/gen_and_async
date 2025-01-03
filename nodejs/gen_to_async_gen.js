@@ -43,8 +43,100 @@ const _await = (expResult) => {
  * */
 const _yield = _await;
 
+const Next = (next, v, resolveYield, rejectYield) =>
+    ({next, v, resolveYield, rejectYield});
+
 class AsyncGenerator {
+    #generator;
+    #nextQueue = null;
+    #nextQueueTail = null;
+    #onResolveValueYielded = null;
+    #onResolveValueYieldedDone = null;
+    #onRejectValueYielded = null;
+    #onStepOk = null;
+    #onStepFail = null;
+    #lastReturn = null;
+
     constructor(genFunc, args) {
+        this.#generator = genFunc(...args);
+    }
+
+    #resolveYield(v) {
+        let next = this.#nextQueue.next;
+        this.#nextQueue = next;
+        next.resolveYield(v);
+    }
+
+    #rejectYield(v) {
+        let next = this.#nextQueue.next;
+        this.#nextQueue = next;
+        next.rejectYield(v);
+    }
+
+    #step(v) {
+        let nextResult;
+        try {
+            nextResult = this.#generator.next(v);
+        } catch (e) {
+            Promise.reject(e).catch(this.#onRejectValueYielded);
+            return;
+        }
+        let nextValue = nextResult.value;
+        if (!nextResult.done) {
+            if (nextValue.awaited) {
+                Promise.resolve(nextValue.value)
+                    .then(this.#onStepOk, this.#onStepFail);
+            } else {
+                Promise.resolve(nextValue.value)
+                    .then(this.#onResolveValueYielded,
+                        this.#onStepFail);
+            }
+        } else {
+            Promise.resolve(nextValue)
+                .then(this.#onResolveValueYieldedDone,
+                    this.#onRejectValueYielded);
+        }
+    }
+
+    #start() {
+        this.#onResolveValueYielded = (value) => {
+            this.#resolveYield({
+                value,
+                done: false
+            });
+        };
+        this.#onResolveValueYieldedDone = (value) => {
+            this.#resolveYield({
+                value,
+                done: true
+            });
+        };
+        this.#onRejectValueYielded = (error) => {
+            this.#rejectYield(error);
+        };
+        this.#onStepOk = (value) => {
+            this.#step({value, ok: true});
+        };
+        this.#onStepFail = (value) => {
+            this.#step({value, ok: false});
+        };
+        this.#nextQueue = Next(null);
+        this.#nextQueueTail = this.#nextQueue;
+    }
+
+    #end() {
+        this.#generator = null;
+        this.#onResolveValueYielded = null;
+        this.#onResolveValueYieldedDone = null;
+        this.#onRejectValueYielded = null;
+        this.#onStepOk = null;
+        this.#onStepFail = null;
+        this.#nextQueue = null;
+        this.#nextQueueTail = null;
+    }
+
+    [Symbol.asyncIterator]() {
+        return this;
     }
 }
 
