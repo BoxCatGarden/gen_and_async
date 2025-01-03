@@ -141,10 +141,45 @@ class AsyncGenerator {
 
     }
 
+    #nextDone(v) {
+        return this.#lastReturn.then(doneArrow, doneArrow);
+    }
+
+    #nextEnqueue(v) {
+        let next;
+        let yieldPromise = new Promise((r, h) => {
+            next = Next(null, v, r, h);
+        });
+        this.#nextQueueTail.next = next;
+        this.#nextQueueTail = next;
+
+        if (this.#nextQueue.next === this.#nextQueueTail)
+            this.#step({value: v, ok: true});
+
+        return yieldPromise;
+    }
+
+    #nextInit(v) {
+        this.#nextInner = this.#nextEnqueue;
+        this.#start();
+        return this.#nextEnqueue(v);
+    }
+
+    #nextInner = this.#nextInit;
+
+    next(v) {
+        return this.#nextInner(v);
+    }
+
     [Symbol.asyncIterator]() {
         return this;
     }
 }
+
+const doneArrow = () => ({
+    value: undefined,
+    done: true
+});
 
 /**
  * Wrap a generator function as an async generator function.<br/>
