@@ -183,10 +183,73 @@ class AsyncGenerator {
         return this.#nextInner(v);
     }
 
-    throw(v) {
+    throw(e) {
+        let rejectValue;
+        let valuePromise = new Promise((r, h) => {
+            rejectValue = h;
+        });
+
+        this.#doReturn(e, rejectValue);
+
+        return valuePromise;
     }
 
     return(v) {
+        let resolveValue;
+        let valuePromise = new Promise(r => {
+            resolveValue = r;
+        });
+
+        this.#bindDeref(valuePromise);
+        this.#doReturn(v, resolveValue);
+        this.#lastReturn = valuePromise;
+        this.#nextInner = this.#nextDone;
+
+        return valuePromise.then(doneValueArrow);
+    }
+
+    #doReturn(v, resolveValue) {
+        let wrappedResolveValue = () => {
+            resolveValue(v);
+        };
+
+        if (this.#lastReturn) {
+            this.#lastReturn.then(wrappedResolveValue, wrappedResolveValue);
+            return;
+        }
+
+        if (this.#nextQueue === this.#nextQueueTail) {
+            this.#returnNoWait(wrappedResolveValue);
+            return;
+        }
+
+        this.#returnNext(wrappedResolveValue);
+    }
+
+    #bindDeref(promise) {
+        let deref = () => {
+            // Dereference the object referenced in Promise `promise`.
+            if (this.#lastReturn === promise)
+                this.#lastReturn = Promise.resolve();
+        };
+        promise.then(deref, deref);
+    }
+
+    #returnNoWait(wrappedResolveValue) {
+        this.#lastReturn = Promise.resolve();
+        this.#nextInner = this.#nextDone;
+        this.#end();
+        this.#lastReturn.then(wrappedResolveValue);
+    }
+
+    #returnNext(wrappedResolveValue) {
+        let next = Next(
+            null,
+            null,
+            wrappedResolveValue,
+            null);
+        this.#nextQueueTail.next = next;
+        this.#nextQueueTail = next;
     }
 
     [Symbol.asyncIterator]() {
@@ -196,6 +259,10 @@ class AsyncGenerator {
 
 const doneArrow = () => ({
     value: undefined,
+    done: true
+});
+const doneValueArrow = (value) => ({
+    value,
     done: true
 });
 
