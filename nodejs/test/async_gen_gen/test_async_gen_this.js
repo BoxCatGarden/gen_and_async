@@ -8,8 +8,8 @@ const {
 
 const gen = __async_star(function* () {
     console.log(this.value);
-    yield this.value;
-    yield this.value;
+    _yield(yield Yielded(this.value));
+    _yield(yield Yielded(this.value));
 });
 
 let a = {value: 2, gen};

@@ -7,7 +7,7 @@ const {
 } = require('../../gen_to_async_gen.js');
 
 const gen = __async_star(function* () {
-    yield 5;
+    _yield(yield Yielded(5));
     return 6;
 });
 

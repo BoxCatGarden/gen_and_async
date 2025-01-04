@@ -8,7 +8,7 @@ const {
 
 const a = __async_star(function* (n) {
     for (let i = 0; i < n; ++i) {
-        let b = yield i;
+        let b = _yield(yield Yielded(i));
         console.log(`next input ${i} =`, b);
     }
     return n;

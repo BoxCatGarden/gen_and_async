@@ -8,14 +8,14 @@ const {
 
 const gen = __async_star(function* () {
     try {
-        var a = yield Promise.reject(55);
+        var a = _yield(yield Yielded(Promise.reject(55)));
     } catch (e) {
         console.log(`yield error=${e}`);
     }
     console.log(`a=`, a);
-    var b = yield Promise.resolve(66);
+    var b = _yield(yield Yielded(Promise.resolve(66)));
     console.log(`b=`, b);
-    var c = yield 90;
+    var c = _yield(yield Yielded(90));
     console.log(`c=`, c);
     c.catch(() => undefined);
     try {

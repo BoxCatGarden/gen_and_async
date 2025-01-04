@@ -18,11 +18,11 @@ b.throw(3).then(v => console.log(v)).catch(e => console.log(e));
 b.throw(2).catch(e => console.log(e));
 
 const genDelay = __async_star(function* () {
-    yield new Promise(r => {
+    _yield(yield Yielded(new Promise(r => {
         setTimeout(() => {
             r(33);
         }, 2000);
-    });
+    })));
     return 22;
 });
 

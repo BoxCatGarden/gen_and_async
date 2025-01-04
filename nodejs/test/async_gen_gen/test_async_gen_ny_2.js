@@ -7,9 +7,9 @@ const {
 } = require('../../gen_to_async_gen.js');
 
 const gen = __async_star(function* () {
-    var a = yield Promise.reject(55);
+    var a = _yield(yield Yielded(Promise.reject(55)));
     console.log(a);
-    var b = yield Promise.resolve(66);
+    var b = _yield(yield Yielded(Promise.resolve(66)));
     console.log(b);
     return Promise.reject(3);
 });

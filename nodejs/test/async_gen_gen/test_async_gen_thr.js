@@ -7,11 +7,11 @@ const {
 } = require('../../gen_to_async_gen.js');
 
 const genDelay = __async_star(function* () {
-    yield new Promise(r => {
+    _yield(yield Yielded(new Promise(r => {
         setTimeout(() => {
             r(33);
         }, 2000);
-    });
+    })));
     return 22;
 });
 

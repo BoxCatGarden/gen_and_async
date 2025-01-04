@@ -8,7 +8,7 @@ const {
 
 const gen = __async_star(function* (n) {
     while (n) {
-        let v = yield await n;
+        let v = _yield(yield Yielded(_await(yield Awaited(n))));
         console.log('next =', v);
         --n;
     }

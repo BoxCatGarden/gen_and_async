@@ -8,7 +8,7 @@ const {
 
 const a = __async_star(function* () {
     console.log('run 1st .next()');
-    yield 505;
+    _yield(yield Yielded(505));
     console.log('run 2nd .next()');
     console.log('after 1st yield');
     var p = Promise.resolve(77);
@@ -24,15 +24,15 @@ const a = __async_star(function* () {
      *      2nd=...,
      *      after after p
      * ]. */
-    yield p;
+    _yield(yield Yielded(p));
     console.log('run 3rd .next()');
     console.log('after 2nd yield');
-    yield new Promise(r => {
+    _yield(yield Yielded(new Promise(r => {
         setTimeout(()=>{r(33)}, 2000);
-    });
+    })));
     console.log('run 4th .next()');
     console.log('after 3rd yield');
-    yield 11;
+    _yield(yield Yielded(11));
     console.log('@@@@ fin');
 });
 
