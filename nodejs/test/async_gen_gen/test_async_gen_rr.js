@@ -1,15 +1,14 @@
 const {
-    AsyncGenerator,
-    __star
-} = require('../../async_to_gen.js');
+    Awaited,
+    Yielded,
+    _await,
+    _yield,
+    __async_star
+} = require('../../gen_to_async_gen.js');
 
-async function genInner() {
+const gen = __async_star(function* () {
     return 11;
-}
-
-function gen() {
-    return new AsyncGenerator(genInner, []);
-}
+});
 
 var b = gen();
 b.next().then(v => console.log(JSON.stringify(v)));
@@ -18,12 +17,12 @@ b.return(55).then(v => console.log(JSON.stringify(v)));
 b.throw(3).then(v => console.log(v)).catch(e => console.log(e));
 b.throw(2).catch(e => console.log(e));
 
-const genDelay = __star(async function (_yield) {
-    await _yield(new Promise(r => {
+const genDelay = __async_star(function* () {
+    yield new Promise(r => {
         setTimeout(() => {
             r(33);
         }, 2000);
-    }));
+    });
     return 22;
 });
 

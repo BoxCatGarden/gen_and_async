@@ -1,13 +1,17 @@
 const {
-    __star
-} = require('../../async_to_gen.js');
+    Awaited,
+    Yielded,
+    _await,
+    _yield,
+    __async_star
+} = require('../../gen_to_async_gen.js');
 
-const genDelay = __star(async function (_yield) {
-    await _yield(new Promise(r => {
+const genDelay = __async_star(function* () {
+    yield new Promise(r => {
         setTimeout(() => {
             r(33);
         }, 2000);
-    }));
+    });
     return 22;
 });
 

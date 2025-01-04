@@ -1,12 +1,14 @@
-const AsyncGenerator = require('../../async_to_gen.js').AsyncGenerator;
+const {
+    Awaited,
+    Yielded,
+    _await,
+    _yield,
+    __async_star
+} = require('../../gen_to_async_gen.js');
 
-async function genInner() {
+const gen = __async_star(function* () {
 
-}
-
-function gen() {
-    return new AsyncGenerator(genInner, []);
-}
+});
 
 var b = gen();
 b.return(new Promise(r => {

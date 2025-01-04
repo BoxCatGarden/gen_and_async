@@ -1,7 +1,13 @@
-const {__star} = require("../../async_to_gen.js");
+const {
+    Awaited,
+    Yielded,
+    _await,
+    _yield,
+    __async_star
+} = require('../../gen_to_async_gen.js');
 
-const gen = __star(async function (_yield) {
-    await _yield(11);
+const gen = __async_star(function* () {
+    yield 11;
     return 22;
 });
 

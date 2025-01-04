@@ -1,20 +1,18 @@
 const {
-    AsyncGenerator,
-    nextInput
-} = require('../../async_to_gen.js');
+    Awaited,
+    Yielded,
+    _await,
+    _yield,
+    __async_star
+} = require('../../gen_to_async_gen.js');
 
-async function genInner(_yield, va) {
-    console.log('va=', va);
-    var a = nextInput(await _yield(Promise.reject(55)));
+const gen = __async_star(function* () {
+    var a = yield Promise.reject(55);
     console.log(a);
-    var b = nextInput(await _yield(Promise.resolve(66)));
+    var b = yield Promise.resolve(66);
     console.log(b);
     return Promise.reject(3);
-}
-
-function gen() {
-    return new AsyncGenerator(genInner, [25]);
-}
+});
 
 Promise.resolve().then(() => console.log('##################'));
 var b = gen();

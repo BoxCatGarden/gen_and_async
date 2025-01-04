@@ -1,14 +1,17 @@
 const {
-    nextInput,
-    __star
-} = require('../../async_to_gen.js');
+    Awaited,
+    Yielded,
+    _await,
+    _yield,
+    __async_star
+} = require('../../gen_to_async_gen.js');
 
-const a = __star(async function (_yield, n) {
+const a = __async_star(function* (n) {
     for (let i = 0; i < n; ++i) {
-        let b = nextInput(await _yield(i));
+        let b = yield i;
         console.log(`next input ${i} =`, b);
     }
-    return await n;
+    return n;
 });
 
 async function b() {
