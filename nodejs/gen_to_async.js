@@ -5,8 +5,8 @@ class AsyncFunctionOnce {
     onOk;
     onFail;
 
-    constructor(genFunc, args) {
-        this.generator = genFunc(...args);
+    constructor(genFunc, thisArg, args) {
+        this.generator = genFunc.apply(thisArg, args);
     }
 
     run() {
@@ -60,7 +60,9 @@ const _await = (expResult) => {
  * @see _await
  * */
 const __async = (genFunc) => {
-    return (...args) => new AsyncFunctionOnce(genFunc, args).run();
+    return (function (...args) {
+        return new AsyncFunctionOnce(genFunc, this, args).run();
+    });
 };
 
 
