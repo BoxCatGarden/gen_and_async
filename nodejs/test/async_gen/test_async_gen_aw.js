@@ -1,10 +1,15 @@
-async function* gen(n) {
+const {
+    __star,
+    nextInput
+} = require('../../async_to_gen.js');
+
+const gen = __star(async function (_yield, n) {
     while (n) {
-        let v = yield await n;
+        let v = nextInput(await _yield(n));
         console.log('next =', v);
         --n;
     }
-}
+});
 
 async function test() {
     let n = 5;
