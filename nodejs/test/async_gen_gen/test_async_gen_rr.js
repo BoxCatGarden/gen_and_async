@@ -7,7 +7,7 @@ const {
 } = require('../../gen_to_async_gen.js');
 
 const gen = __async_star(function* () {
-    return 11;
+    return _await(yield Awaited(11));
 });
 
 var b = gen();
@@ -23,7 +23,7 @@ const genDelay = __async_star(function* () {
             r(33);
         }, 2000);
     })));
-    return 22;
+    return _await(yield Awaited(22));
 });
 
 b = genDelay();

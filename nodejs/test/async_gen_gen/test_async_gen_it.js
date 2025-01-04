@@ -11,7 +11,7 @@ const a = __async_star(function* (n) {
         let b = _yield(yield Yielded(i));
         console.log(`next input ${i} =`, b);
     }
-    return n;
+    return _await(yield Awaited(n));
 });
 
 async function b() {

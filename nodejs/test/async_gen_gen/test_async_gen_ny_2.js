@@ -11,7 +11,7 @@ const gen = __async_star(function* () {
     console.log(a);
     var b = _yield(yield Yielded(Promise.resolve(66)));
     console.log(b);
-    return Promise.reject(3);
+    return _await(yield Awaited(Promise.reject(3)));
 });
 
 Promise.resolve().then(() => console.log('##################'));

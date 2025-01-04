@@ -12,7 +12,7 @@ const genDelay = __async_star(function* () {
             r(33);
         }, 2000);
     })));
-    return 22;
+    return _await(yield Awaited(22));
 });
 
 b = genDelay();

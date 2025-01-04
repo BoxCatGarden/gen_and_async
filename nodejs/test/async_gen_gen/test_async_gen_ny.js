@@ -19,10 +19,10 @@ const gen = __async_star(function* () {
     console.log(`c=`, c);
     c.catch(() => undefined);
     try {
-        return Promise.reject(3);
+        return _await(yield Awaited(Promise.reject(3)));
     } catch (e) {
         console.log(`return error=${e}`);
-        return 7;
+        return _await(yield Awaited(7));
     }
 });
 

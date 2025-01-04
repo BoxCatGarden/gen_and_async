@@ -8,7 +8,7 @@ const {
 
 const gen = __async_star(function* () {
     _yield(yield Yielded(5));
-    return 6;
+    return _await(yield Awaited(6));
 });
 
 async function a() {
