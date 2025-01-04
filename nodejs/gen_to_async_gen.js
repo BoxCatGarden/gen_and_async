@@ -80,7 +80,7 @@ class AsyncGenerator {
                         this.#onStepFail);
             }
         } else {
-            if (nextValue.then instanceof Function) {
+            if (nextValue && (nextValue.then instanceof Function)) {
                 nextValue.then(
                     this.#onResolveValueYieldedDone,
                     this.#onRejectValueYielded);
