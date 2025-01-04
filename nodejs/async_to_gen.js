@@ -14,6 +14,7 @@ class Next {
 
 class AsyncGenerator {
     #asyncFunc;
+    #thisArg;
     #args;
     #yielded = true;
     #setYieldedFalse = null;
@@ -26,6 +27,7 @@ class AsyncGenerator {
 
     /**
      * @param asyncFunc - The async function (including async arrow function) on which this generator is based.
+     * @param thisArg - `@this` for calling `@asyncFunc`.
      * @param args - An Array containing the arguments without `@_yield` for calling `@asyncFunc`.
      * @description -
      * The signature of `@asyncFunc` should be in the format like the following.
@@ -95,8 +97,9 @@ class AsyncGenerator {
      * stable levels of "`then()`".
      * @see nextInput
      * */
-    constructor(asyncFunc, args) {
+    constructor(asyncFunc, thisArg, args) {
         this.#asyncFunc = asyncFunc;
+        this.#thisArg = thisArg;
         this.#args = args;
     }
 
@@ -183,13 +186,14 @@ class AsyncGenerator {
         this.#nextInner = this.#nextEnqueue;
 
         let asyncFunc = this.#asyncFunc;
+        let thisArg = this.#thisArg;
         let args = this.#args;
         this.#start();
 
         let yieldPromise = this.#nextEnqueue(v);
         this.#yielded = false;
 
-        let returnValue = asyncFunc(value => {
+        let returnValue = asyncFunc.call(thisArg, (value) => {
             return this.#YIELD(value);
         }, ...args);
 
@@ -231,6 +235,7 @@ class AsyncGenerator {
 
     #start() {
         this.#asyncFunc = null;
+        this.#thisArg = null;
         this.#args = null;
         this.#nextQueue = new Next(null);
         this.#nextQueueTail = this.#nextQueue;
@@ -255,6 +260,7 @@ class AsyncGenerator {
 
     #startNoQueue() {
         this.#asyncFunc = null;
+        this.#thisArg = null;
         this.#args = null;
     }
 
@@ -376,7 +382,9 @@ const nextInput = (yieldExpressionResult) => yieldExpressionResult[0].v;
  * @see AsyncGenerator
  * */
 const __star = (asyncFunc) => {
-    return (...args) => new AsyncGenerator(asyncFunc, args);
+    return (function (...args) {
+        return new AsyncGenerator(asyncFunc, this, args);
+    });
 };
 
 
