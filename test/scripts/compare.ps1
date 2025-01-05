@@ -4,12 +4,14 @@ Param(
   [string]$OutputFile
 )
 
-$Local = Split-Path -Parent $PSCommandPath
+$Local = "$(Split-Path -Parent $PSCommandPath)\cache"
 foreach ($file in (Get-ChildItem -Path $PathA -File)) {
-  node "$($file.FullName)" 2>&1 > "$Local\out1.txt"
-  node "$PathB\$($file.Name)" 2>&1 > "$Local\out2.txt"
+  $out1 = "$Local\$($file.BaseName)_1.txt"
+  $out2 = "$Local\$($file.BaseName)_2.txt"
+  node "$($file.FullName)" 2>&1 > $out1
+  node "$PathB\$($file.Name)" 2>&1 > $out2
   $file.Name >> $OutputFile
-  Compare-Object -ReferenceObject (Get-Content -Path "$Local\out1.txt")`
-   -DifferenceObject (Get-Content -Path "$Local\out2.txt") >>`
+  Compare-Object -ReferenceObject (Get-Content -Path $out1)`
+   -DifferenceObject (Get-Content -Path $out2) >>`
    $OutputFile
 }
