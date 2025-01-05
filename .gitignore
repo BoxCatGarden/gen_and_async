@@ -1,2 +1,2 @@
-/test/scripts/cache/
-/test/output/
+/test/scripts/cache/**
+/test/output/**
