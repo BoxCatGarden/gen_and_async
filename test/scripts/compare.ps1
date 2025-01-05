@@ -13,6 +13,7 @@ foreach ($file in (Get-ChildItem -Path $PathA -File)) {
   node "$PathB\$($file.Name)" 2>&1 > $out2
   $file.Name >> $OutputFile
   Compare-Object -ReferenceObject (Get-Content -Path $out1)`
-   -DifferenceObject (Get-Content -Path $out2) >>`
-   $OutputFile
+    -DifferenceObject (Get-Content -Path $out2)`
+    -SyncWindow 0 >>`
+    $OutputFile
 }
