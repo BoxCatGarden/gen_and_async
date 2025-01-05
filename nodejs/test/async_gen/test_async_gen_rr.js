@@ -8,7 +8,7 @@ async function genInner() {
 }
 
 function gen() {
-    return new AsyncGenerator(genInner, []);
+    return new AsyncGenerator(genInner, this, []);
 }
 
 var b = gen();
